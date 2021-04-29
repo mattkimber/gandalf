@@ -218,3 +218,15 @@ func getSizedByteSlice(size int64, slice []byte) []byte {
 	result = append(result, slice...)
 	return result
 }
+
+
+func TestMultipartVoxelObject(t *testing.T) {
+	object, err := FromFile("testdata/test_cube_joined.vox")
+	if err != nil {
+		t.Errorf("Could not read object: %v", err)
+	}
+
+	if object.Size.X != 4 {
+		t.Errorf("Object size X - expected %d, got %d", 4, object.Size.X)
+	}
+}
