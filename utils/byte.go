@@ -2,12 +2,12 @@ package utils
 
 import (
 	"bytes"
-	"github.com/mattkimber/gandalf/geometry"
+	"github.com/mattkimber/gandalf/magica/types"
 	"io/ioutil"
 	"os"
 )
 
-func Make3DByteSlice(size geometry.Point) [][][]byte {
+func Make3DByteSlice(size types.Size) [][][]byte {
 	result := make([][][]byte, size.X)
 
 	for x := range result {

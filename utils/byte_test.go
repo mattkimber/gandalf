@@ -1,12 +1,12 @@
 package utils
 
 import (
-	"github.com/mattkimber/gandalf/geometry"
+	"github.com/mattkimber/gandalf/magica/types"
 	"testing"
 )
 
 func TestMake3DByteSlice(t *testing.T) {
-	slice := Make3DByteSlice(geometry.Point{X: 1, Y: 2, Z: 3})
+	slice := Make3DByteSlice(types.Size{X: 1, Y: 2, Z: 3})
 
 	if len(slice) != 1 {
 		t.Fatalf("x length is incorrect: expected 1, was %d", len(slice))

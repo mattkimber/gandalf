@@ -2,6 +2,7 @@ package magica
 
 import (
 	"github.com/mattkimber/gandalf/geometry"
+	"github.com/mattkimber/gandalf/magica/types"
 	"github.com/mattkimber/gandalf/utils"
 )
 
@@ -64,7 +65,7 @@ func (v *VoxelObject) Copy() (result VoxelObject) {
 	// We don't do anything with the palette data, so a shallow copy is okay
 	result.PaletteData = v.PaletteData
 
-	result.Voxels = utils.Make3DByteSlice(v.Size)
+	result.Voxels = utils.Make3DByteSlice(types.Size{X: v.Size.X, Y: v.Size.Y, Z: v.Size.Z})
 	v.Iterate(func(x, y, z int) { result.Voxels[x][y][z] = v.Voxels[x][y][z] })
 
 	return
