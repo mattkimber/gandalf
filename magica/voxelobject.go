@@ -14,7 +14,7 @@ type VoxelObject struct {
 	Size        geometry.Point
 }
 
-func (v *VoxelObject) GetPoints() (result []geometry.PointWithColour) {
+func (v *VoxelObject) GetPoints() (result types.PointData) {
 	ct := 0
 
 	v.Iterate(func(x, y, z int) {

@@ -1,17 +1,20 @@
 package types
 
 import (
+	"bytes"
+	"encoding/binary"
+	"fmt"
 	"strconv"
 	"strings"
 )
 
 type Translation struct {
-	NodeID int
-	Dictionary Dictionary
+	NodeID      int
+	Attributes  Dictionary
 	ChildNodeID int
-	ReservedID int
-	LayerID int
-	Frames []Frame
+	ReservedID  int
+	LayerID     int
+	Frames      []Frame
 }
 
 const SGTranslation = "translation"
@@ -56,11 +59,76 @@ func (r *MagicaReader) GetTranslation() Translation {
 	}
 
 	return Translation{
-		NodeID:         nodeID,
-		Dictionary: 	dictionary,
-		ChildNodeID:    childNodeID,
-		ReservedID:     reservedID,
-		LayerID:        layerID,
-		Frames: 		frames,
+		NodeID:      nodeID,
+		Attributes:  dictionary,
+		ChildNodeID: childNodeID,
+		ReservedID:  reservedID,
+		LayerID:     layerID,
+		Frames:      frames,
 	}
+}
+
+
+func (t *Translation) GetBytes() ([]byte, error) {
+	buf := new(bytes.Buffer)
+	err := binary.Write(buf, binary.LittleEndian, int32(t.NodeID))
+	if err != nil {
+		return nil, err
+	}
+
+	dictBytes, err := t.Attributes.GetBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = buf.Write(dictBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buf, binary.LittleEndian, int32(t.ChildNodeID))
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buf, binary.LittleEndian, int32(t.ReservedID))
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buf, binary.LittleEndian, int32(t.LayerID))
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(buf, binary.LittleEndian, int32(len(t.Frames)))
+	if err != nil {
+		return nil, err
+	}
+
+	for _, frame := range t.Frames {
+		dictionary := Dictionary{Values: map[string]string{
+			"_t": fmt.Sprintf("%d %d %d", frame.X, frame.Y, frame.Z),
+		}}
+
+		dictBytes, err = dictionary.GetBytes()
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = buf.Write(dictBytes)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return buf.Bytes(), nil
+}
+
+func(t *Translation) IsChunk() bool {
+	return true
+}
+
+func(t *Translation) GetChunkName() string {
+	return "nTRN"
 }
