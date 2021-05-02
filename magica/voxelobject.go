@@ -108,17 +108,26 @@ func (v *VoxelObject) Iterate(iterator func(int, int, int)) {
 	}
 }
 
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+
+	return b
+}
+
 func (v *VoxelObject) Split(size int) scenegraph.Node {
 	objectsX := (v.Size.X + (size - 1)) / size
 	objectsY := (v.Size.Y + (size - 1)) / size
 	objectsZ := (v.Size.Z + (size - 1)) / size
 
-	midpoint := size / 2
 	nodes := make([]scenegraph.Node, 0)
 
 	for x := 0; x < objectsX; x++ {
 		for y := 0; y < objectsY; y++ {
 			for z := 0; z < objectsZ; z++ {
+
+				maxX, maxY, maxZ := 0, 0, 0
 
 				object := NewVoxelObject(geometry.Point{X: size, Y: size, Z:size}, v.PaletteData)
 
@@ -130,15 +139,23 @@ func (v *VoxelObject) Split(size int) scenegraph.Node {
 					colour := v.SafeGet(geometry.Point{X: i0, Y: j0, Z: k0})
 					if colour != 0 {
 						object.Set(geometry.Point{X: i, Y: j, Z: k}, colour)
+						maxX = max(maxX, i+1)
+						maxY = max(maxY, j+1)
+						maxZ = max(maxZ, k+1)
 					}
 				})
 
+				// Make all sizes divisible by 2
+				maxX = maxX + (maxX % 2)
+				maxY = maxY + (maxY % 2)
+				maxZ = maxZ + (maxZ % 2)
+
 				node := scenegraph.Node{
-					Location: geometry.Point{X: (x*size)+midpoint, Y: (y*size)+midpoint, Z: (z*size)+midpoint},
-					Size:     types.Size{X: size, Y: size, Z: size},
+					Location: geometry.Point{X: (x*size)+(maxX/2), Y: (y*size)+(maxY/2), Z: (z*size)+(maxZ/2)},
+					Size:     types.Size{X: maxX, Y: maxY, Z: maxZ},
 					Models:   []scenegraph.Model{{
 						Points: object.GetPoints(),
-						Size:   types.Size{X: object.Size.X, Y: object.Size.Y, Z: object.Size.Z},
+						Size:   types.Size{X: maxX, Y: maxY, Z: maxZ},
 						}},
 				}
 				nodes = append(nodes, node)
