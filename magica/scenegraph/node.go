@@ -27,7 +27,7 @@ func GetScenegraph(scenegraphMap Map, pointData []types.PointData, sizeData []ty
 			Models: []Model{ {Points: pointData[0], Size: sizeData[0] }},
 		}
 	} else if len(scenegraphMap) > 0 {
-		return GetNodes(scenegraphMap, scenegraphMap[0], 0, 0, 0, pointData, sizeData)
+		return Compose(scenegraphMap, scenegraphMap[0], 0, 0, 0, pointData, sizeData)
 	}
 
 	return Node{}
@@ -47,38 +47,4 @@ func (n *Node) GetExtents() Extent {
 	}
 
 	return extents.GetBounds()
-}
-
-func GetNodes(graph Map, current types.SceneGraphItem, x, y, z int, pointData []types.PointData, sizeData []types.Size) (result Node) {
-	if current.GetType() == types.SGTranslation {
-		tn := current.(*types.Translation)
-		for _, frame := range tn.Frames {
-			x += frame.X
-			y += frame.Y
-			z += frame.Z
-		}
-	}
-
-	if current.GetType() == types.SGShape {
-		shp := current.(*types.Shape)
-		size := types.Size{}
-		models := make([]Model, len(shp.Models))
-		for idx, child := range shp.Models {
-			models[idx] = Model{Points: pointData[child], Size: sizeData[child]}
-			size = sizeData[child]
-		}
-		result.Models = models
-		result.Location = geometry.Point{X: x - (size.X / 2), Y: y - (size.Y / 2), Z: z - (size.Z / 2)}
-	}
-
-	children := make([]Node, 0)
-	for _, child := range current.GetChildren() {
-		next, ok := graph[child]; if ok {
-			children = append(children, GetNodes(graph, next, x, y, z, pointData, sizeData))
-		}
-	}
-
-	result.Children = children
-
-	return result
 }

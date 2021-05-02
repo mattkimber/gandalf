@@ -107,9 +107,13 @@ func (t *Translation) GetBytes() ([]byte, error) {
 	}
 
 	for _, frame := range t.Frames {
-		dictionary := Dictionary{Values: map[string]string{
-			"_t": fmt.Sprintf("%d %d %d", frame.X, frame.Y, frame.Z),
-		}}
+		dictionary := Dictionary{}
+
+		if frame.X != 0 || frame.Y != 0 || frame.Z != 0 {
+			dictionary.Values = map[string]string{
+				"_t": fmt.Sprintf("%d %d %d", frame.X, frame.Y, frame.Z),
+			}
+		}
 
 		dictBytes, err = dictionary.GetBytes()
 		if err != nil {

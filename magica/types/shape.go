@@ -65,6 +65,18 @@ func (s *Shape) GetBytes() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		d := Dictionary{}
+		attrBytes, err := d.GetBytes()
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = buf.Write(attrBytes)
+		if err != nil {
+			return nil, err
+		}
+
 	}
 
 	return buf.Bytes(), nil

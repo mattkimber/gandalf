@@ -5,37 +5,68 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/mattkimber/gandalf/magica/chunk"
+	"github.com/mattkimber/gandalf/magica/scenegraph"
 	"github.com/mattkimber/gandalf/magica/types"
 	"io"
 	"os"
+	"sort"
 )
 
+const maxVoxelSize = 256
+
 func(v *VoxelObject) GetData() []byte {
-	if v.Size.X < 256 && v.Size.Y < 256 && v.Size.Z < 256 {
+	var graph scenegraph.Map
+	var pointData []types.PointData
+	var sizeData []types.Size
+
+	if v.Size.X < maxVoxelSize && v.Size.Y < maxVoxelSize && v.Size.Z < maxVoxelSize {
 		// Simple case, fits in a single Magica object
-		main := chunk.MainChunk{}
-		size := chunk.Chunk{Item: &types.Size{
+		sizeData = []types.Size{{
 			X: v.Size.X,
 			Y: v.Size.Y,
 			Z: v.Size.Z,
 		}}
 
-		pd := v.GetPoints()
-		xyzi := chunk.Chunk{Item: &pd}
-
-		pal := types.Palette(v.PaletteData)
-		rgba := chunk.Chunk{Item: &pal}
-
-		chunks := chunk.Chunk{
-			Item:     &main,
-			Children: []chunk.Chunk{size,xyzi,rgba},
-		}
-
-		return chunks.GetBytes()
+		pointData = []types.PointData{v.GetPoints()}
+	} else {
+		// Complex case, object needs to be split
+		scenegraphNode := v.Split(maxVoxelSize)
+		graph, pointData, sizeData = scenegraphNode.Decompose()
 	}
 
-	// Larger objects not yet implemented
-	return nil
+	chunks := make([]chunk.Chunk, 0)
+
+	for idx, _ := range pointData {
+		size := chunk.Chunk{Item: &sizeData[idx]}
+		chunks = append(chunks, size)
+		xyzi := chunk.Chunk{Item: &pointData[idx]}
+		chunks = append(chunks, xyzi)
+	}
+
+	graphKeys := make([]int, 0, len(graph))
+	for k, _ := range graph {
+		graphKeys = append(graphKeys, k)
+	}
+	sort.Ints(graphKeys)
+
+	for _, k := range graphKeys {
+		mapItem, _ := graph[k]
+
+		mi := chunk.Chunk{Item: mapItem}
+		chunks = append(chunks, mi)
+	}
+
+	pal := types.Palette(v.PaletteData)
+	chunks = append(chunks, chunk.Chunk{Item: &pal})
+
+	main := chunk.MainChunk{}
+
+	mainChunk := chunk.Chunk{
+		Item:     &main,
+		Children: chunks,
+	}
+
+	return mainChunk.GetBytes()
 }
 
 func (v *VoxelObject) writeHeader(handle io.Writer) (err error) {

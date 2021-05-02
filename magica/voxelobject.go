@@ -2,6 +2,7 @@ package magica
 
 import (
 	"github.com/mattkimber/gandalf/geometry"
+	"github.com/mattkimber/gandalf/magica/scenegraph"
 	"github.com/mattkimber/gandalf/magica/types"
 	"github.com/mattkimber/gandalf/utils"
 )
@@ -104,5 +105,50 @@ func (v *VoxelObject) Iterate(iterator func(int, int, int)) {
 				iterator(x, y, z)
 			}
 		}
+	}
+}
+
+func (v *VoxelObject) Split(size int) scenegraph.Node {
+	objectsX := (v.Size.X + (size - 1)) / size
+	objectsY := (v.Size.Y + (size - 1)) / size
+	objectsZ := (v.Size.Z + (size - 1)) / size
+
+	midpoint := size / 2
+	nodes := make([]scenegraph.Node, 0)
+
+	for x := 0; x < objectsX; x++ {
+		for y := 0; y < objectsY; y++ {
+			for z := 0; z < objectsZ; z++ {
+
+				object := NewVoxelObject(geometry.Point{X: size, Y: size, Z:size}, v.PaletteData)
+
+				object.Iterate(func(i,j,k int) {
+					i0 := i + (x * size)
+					j0 := j + (y * size)
+					k0 := k + (z * size)
+
+					colour := v.SafeGet(geometry.Point{X: i0, Y: j0, Z: k0})
+					if colour != 0 {
+						object.Set(geometry.Point{X: i, Y: j, Z: k}, colour)
+					}
+				})
+
+				node := scenegraph.Node{
+					Location: geometry.Point{X: (x*size)+midpoint, Y: (y*size)+midpoint, Z: (z*size)+midpoint},
+					Size:     types.Size{X: size, Y: size, Z: size},
+					Models:   []scenegraph.Model{{
+						Points: object.GetPoints(),
+						Size:   types.Size{X: object.Size.X, Y: object.Size.Y, Z: object.Size.Z},
+						}},
+				}
+				nodes = append(nodes, node)
+			}
+		}
+	}
+	
+	return scenegraph.Node{
+		Location: geometry.Point{X: 0, Y: 0, Z: 0},
+		Size:   types.Size{X: objectsX * size, Y: objectsY * size, Z: objectsZ * size},
+		Children: nodes,
 	}
 }
