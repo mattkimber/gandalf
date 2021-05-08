@@ -117,7 +117,7 @@ func TestGetRawVoxels(t *testing.T) {
 	testData = append(testData, getSizedByteSlice(2, []byte{1, 2})...)
 
 	reader := bytes.NewReader(testData)
-	result, err := GetMagicaVoxelObject(reader)
+	result, err := GetMagicaVoxelObject(reader, []int{})
 
 	if err != nil {
 		t.Errorf("Encountered error %v", err)

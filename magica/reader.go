@@ -56,7 +56,7 @@ func getSize(handle io.Reader) int64 {
 }
 
 
-func GetMagicaVoxelObject(handle io.Reader) (VoxelObject, error) {
+func GetMagicaVoxelObject(handle io.Reader, layers []int) (VoxelObject, error) {
 	if !isHeaderValid(handle) {
 		return VoxelObject{}, fmt.Errorf("header not valid")
 	}
@@ -111,7 +111,7 @@ func GetMagicaVoxelObject(handle io.Reader) (VoxelObject, error) {
 	}
 
 
-	graph := scenegraph.GetScenegraph(scenegraphMap, pointData, sizeData)
+	graph := scenegraph.GetScenegraph(scenegraphMap, layers, pointData, sizeData)
 	model := graph.GetCompositeModel()
 
 
@@ -123,18 +123,18 @@ func GetMagicaVoxelObject(handle io.Reader) (VoxelObject, error) {
 }
 
 
-func GetFromReader(handle io.Reader) (v VoxelObject, err error) {
-	v, err = GetMagicaVoxelObject(handle)
+func GetFromReader(handle io.Reader, layers []int) (v VoxelObject, err error) {
+	v, err = GetMagicaVoxelObject(handle, layers)
 	return
 }
 
-func FromFile(filename string) (v VoxelObject, err error) {
+func FromFileWithLayers(filename string, layers []int) (v VoxelObject, err error) {
 	handle, err := os.Open(filename)
 	if err != nil {
 		return VoxelObject{}, err
 	}
 
-	v, err = GetFromReader(handle)
+	v, err = GetFromReader(handle, layers)
 	if err != nil {
 		return v, err
 	}
@@ -145,3 +145,8 @@ func FromFile(filename string) (v VoxelObject, err error) {
 
 	return v, nil
 }
+
+func FromFile(filename string) (v VoxelObject, err error) {
+	return FromFileWithLayers(filename, []int{})
+}
+

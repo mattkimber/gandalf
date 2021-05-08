@@ -31,6 +31,8 @@ func (r *MagicaReader) GetShape() Shape {
 	childNodes := make([]int, childNodeCount)
 	for i := 0; i < childNodeCount; i++ {
 		childNodes[i] = r.GetInt32()
+		// Ignore the node dictionary
+		_ = r.GetDictionary()
 	}
 
 	s.Models = childNodes

@@ -89,7 +89,7 @@ func (n *Node) decomposeWithIDs(id, shapeID *int, graph Map, pointData *[]types.
 	return rootTranslation.NodeID
 }
 
-func Compose(graph Map, current types.SceneGraphItem, x, y, z int, pointData []types.PointData, sizeData []types.Size) (result Node) {
+func Compose(graph Map, current types.SceneGraphItem, x, y, z, layer int, allowedLayers []int, pointData []types.PointData, sizeData []types.Size) (result Node) {
 	if current.GetType() == types.SGTranslation {
 		tn := current.(*types.Translation)
 		for _, frame := range tn.Frames {
@@ -97,16 +97,33 @@ func Compose(graph Map, current types.SceneGraphItem, x, y, z int, pointData []t
 			y += frame.Y
 			z += frame.Z
 		}
+		layer = tn.LayerID
 	}
 
 	if current.GetType() == types.SGShape {
+		isAllowed := false
+		if len(allowedLayers) == 0 {
+			isAllowed = true
+		} else {
+			for _, allowedLayer := range allowedLayers {
+				if allowedLayer == layer {
+					isAllowed = true
+					break
+				}
+			}
+		}
+
 		shp := current.(*types.Shape)
 		size := types.Size{}
 		models := make([]Model, len(shp.Models))
-		for idx, child := range shp.Models {
-			models[idx] = Model{Points: pointData[child], Size: sizeData[child]}
-			size = sizeData[child]
+
+		if isAllowed {
+			for idx, child := range shp.Models {
+				models[idx] = Model{Points: pointData[child], Size: sizeData[child]}
+				size = sizeData[child]
+			}
 		}
+
 		result.Models = models
 		result.Location = geometry.Point{X: x - (size.X / 2), Y: y - (size.Y / 2), Z: z - (size.Z / 2)}
 	}
@@ -114,7 +131,7 @@ func Compose(graph Map, current types.SceneGraphItem, x, y, z int, pointData []t
 	children := make([]Node, 0)
 	for _, child := range current.GetChildren() {
 		next, ok := graph[child]; if ok {
-			children = append(children, Compose(graph, next, x, y, z, pointData, sizeData))
+			children = append(children, Compose(graph, next, x, y, z, layer, allowedLayers, pointData, sizeData))
 		}
 	}
 

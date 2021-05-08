@@ -19,7 +19,7 @@ type Node struct {
 	Children []Node
 }
 
-func GetScenegraph(scenegraphMap Map, pointData []types.PointData, sizeData []types.Size) Node {
+func GetScenegraph(scenegraphMap Map, allowedLayers []int, pointData []types.PointData, sizeData []types.Size) Node {
 	if len(scenegraphMap) == 0 && len(sizeData) > 0 && len(pointData) > 0 {
 		return Node {
 			Location: geometry.Point{},
@@ -27,7 +27,7 @@ func GetScenegraph(scenegraphMap Map, pointData []types.PointData, sizeData []ty
 			Models: []Model{ {Points: pointData[0], Size: sizeData[0] }},
 		}
 	} else if len(scenegraphMap) > 0 {
-		return Compose(scenegraphMap, scenegraphMap[0], 0, 0, 0, pointData, sizeData)
+		return Compose(scenegraphMap, scenegraphMap[0], 0, 0, 0, -1, allowedLayers, pointData, sizeData)
 	}
 
 	return Node{}
