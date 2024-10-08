@@ -145,6 +145,12 @@ func (v *VoxelObject) Split(size int) scenegraph.Node {
 					}
 				})
 
+				if x == objectsX-1 && y == objectsY-1 && z == objectsZ-1 {
+					maxX = v.Size.X - x*size
+					maxY = v.Size.Y - y*size
+					maxZ = v.Size.Z - z*size
+				}
+
 				// Make all sizes divisible by 2
 				maxX = maxX + (maxX % 2)
 				maxY = maxY + (maxY % 2)
